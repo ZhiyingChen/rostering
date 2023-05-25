@@ -52,7 +52,7 @@ class Car:
 
     def update_left_total_dur_and_earliest_avl_time(self, curr_t):
         # update left_work_dur
-        self.left_total_dur = self.left_total_dur - self.max_serve_dur - self.leave_dur - self.return_dur - self.upload_dur - self.unpack_dur
+        self.left_total_dur = self.left_total_dur - self.max_serve_dur - self.leave_dur - self.return_dur - self.upload_dur - self.unpack_dur - self.prepare_dur
 
         # update earliest_avl_time
         if self.left_total_dur - self.leave_dur - self.return_dur - self.upload_dur - self.unpack_dur - self.prepare_dur < self.max_serve_dur:
