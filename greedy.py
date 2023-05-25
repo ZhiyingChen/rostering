@@ -96,8 +96,8 @@ def greedy_output(car_dict):
     out_df = out_df.T
     out_df.to_csv('greedy_output.csv')
 
-
-
+car_dict = run_greedy_algorithm()
+greedy_output(car_dict)
 
 
 
