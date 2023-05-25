@@ -12,7 +12,7 @@ class Sign:
 
 class planHorizon:
     start_time = 0
-    end_time = 365*24
+    end_time = 30*24
 
 class CarSetting:
     upload_dur = 1
