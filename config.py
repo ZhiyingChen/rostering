@@ -11,7 +11,7 @@ class Sign:
 
 
 class planHorizon:
-    start_time = 0
+    start_time = -3
     end_time = 30*24
 
 class CarSetting:
@@ -20,7 +20,6 @@ class CarSetting:
     prepare_dur = 8
     leave_dur = 2
     return_dur = 2
-    min_serve_dur = 6
     max_serve_dur = 6
     rest_dur = 40
     init_left_work_dur = 100
