@@ -1,11 +1,7 @@
-import numpy as np
-
-from greedy import run_greedy_algorithm
-from config import CarSetting, planHorizon, Sign
+from config import CarSetting, planHorizon, Sign, read_config
 from data_structure import Car
 from math import floor, ceil
 import pandas as pd
-import numpy as np
 from time import time
 
 def get_valid_car_num(greedy_car_dict):
@@ -83,6 +79,8 @@ def output(car_dict):
     out_df.to_csv('output.csv')
 
 if __name__ == '__main__':
+
+    read_config()
 
     st = time()
     one_round_dur = CarSetting.upload_dur + CarSetting.leave_dur + CarSetting.max_serve_dur + CarSetting.return_dur + CarSetting.unpack_dur + CarSetting.prepare_dur # 跑一趟需要的总时长
