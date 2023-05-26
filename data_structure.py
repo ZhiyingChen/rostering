@@ -12,7 +12,7 @@ class Car:
         self.prepare_dur = CarSetting.prepare_dur
         self.leave_dur = CarSetting.leave_dur
         self.return_dur = CarSetting.return_dur
-        self.min_serve_dur = CarSetting.min_serve_dur
+        self.min_serve_dur = CarSetting.max_serve_dur
         self.max_serve_dur = CarSetting.max_serve_dur
         self.rest_dur = CarSetting.rest_dur
 
@@ -36,7 +36,7 @@ class Car:
 
         # update earliest_avl_time
         if self.left_work_dur - self.leave_dur - self.return_dur < self.min_serve_dur:
-            self.earliest_avl_time = curr_t + self.rest_dur + self.upload_dur + self.unpack_dur + self.leave_dur + self.return_dur + serve_dur +  self.prepare_dur
+            self.earliest_avl_time = curr_t + self.rest_dur + self.upload_dur + self.unpack_dur + self.leave_dur + self.return_dur + serve_dur + self.prepare_dur
             self.schedule[curr_t] = {'serve': self.upload_dur + self.unpack_dur + self.leave_dur + self.return_dur + serve_dur + self.prepare_dur}
             self.schedule[curr_t + self.upload_dur + self.unpack_dur + self.prepare_dur+ self.leave_dur + self.return_dur + serve_dur] = {'rest': self.rest_dur}
             self.left_work_dur = CarSetting.init_left_work_dur

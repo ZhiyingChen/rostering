@@ -78,8 +78,8 @@ def output(car_dict):
         record_dict[c_id] = record
 
     out_df = pd.DataFrame(record_dict, dtype=object)
-    out_df = out_df.reset_index(drop=True)
     out_df.replace('', Sign.spare, inplace=True)
+    out_df = out_df.loc[planHorizon.start_time:planHorizon.end_time]
     out_df.to_csv('output.csv')
 
 if __name__ == '__main__':
