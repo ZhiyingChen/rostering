@@ -76,6 +76,9 @@ def output(car_dict):
     out_df = pd.DataFrame(record_dict, dtype=object)
     out_df.replace('', Sign.spare, inplace=True)
     out_df = out_df.loc[planHorizon.start_time:planHorizon.end_time]
+    empty_cols = out_df.columns[out_df.eq(Sign.spare).all()]
+    out_df.drop(columns=empty_cols, inplace=True)
+    out_df.set_axis(list(range(1, out_df.shape[1] + 1)), axis=1, inplace=True)
     out_df.to_csv('output.csv')
 
 if __name__ == '__main__':
@@ -96,9 +99,7 @@ if __name__ == '__main__':
     init_total_dur = one_round_dur * continuous_round_num
 
     last_left_work_dur = 0
-    t = planHorizon.start_time
-
-
+    t = planHorizon.start_time - 2880
 
     car_dict = {}
 
@@ -110,7 +111,6 @@ if __name__ == '__main__':
 
     car_dict[new_car.id] = new_car
     id += 1
-
 
     while t <= planHorizon.end_time:
         avl = judge_car_avl(t, car_dict)
