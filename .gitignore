@@ -8,3 +8,4 @@ solutions.zip
 build
 dist
 *.spec
+*.html
