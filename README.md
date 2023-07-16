@@ -5,12 +5,17 @@
 This is a project to solve the following problem.
 <img src="https://github.com/ZhiyingChen/Rostering/blob/master/image/Question.png" style="width:900px; height:400px">
 
-服务区必须每个小时都有至少一辆车在当地服务，同时每辆车在服务区最多工作6h就要返程。每辆车在工作时间内累计工作40h后需要维修48h（其中，备货的8h可以计入维修时间）。问一个月（30天）至少需要多少辆车？并画出这些车的任务甘特图。
+The service area must have at least 1 vehicle serving locally every hour, and each vehicle must return after 6 hours of work in the service area. Each vehicle needs to be repaired for 40h after 80h of cumulative operation during working hours. Q: How many vehicles are needed at least in a month (30 days)? And draw the Gantt chart of the tasks of these cars.
+(All parameters can be changed).
 
 **Result Example**
 
 This is a gantt plot.
 <img src="https://github.com/ZhiyingChen/Rostering/blob/master/image/example.png" style="width:1000px; height:300px">
+
+If we change two parameters, for instance, the service area must have at least 2 vehicles serving locally every hour, and each vehicle needs to be repaired for 40h after 200h of cumulative operation during working hours. Other parameters remain unchanged.
+We get the following gantt plot of results.
+<img src="https://github.com/ZhiyingChen/Rostering/blob/master/image/example2.png" style="width:1000px; height:300px">
 
 **Environment Deployment**
 
@@ -25,7 +30,7 @@ The required packages are listed in requirements.txt. you can install them using
 
 To run project:
 
-    1. put your input data in data.csv
+    1. put your input data in data.csv, you can adjust parameters.
     2. execute python main.py
     3. execute python gantt.py to draw gantt pics of of your result.
 
