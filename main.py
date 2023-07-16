@@ -10,5 +10,6 @@ if __name__ == '__main__':
     env.dig_info()
     env.get_car_schedule()
     env.output()
+    print("The validity of this schedule is {}".format(env.check_validity()))
 
     print(time() - st)

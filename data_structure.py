@@ -41,6 +41,9 @@ class Car:
         self.earliest_avl_time = curr_t + self.rest_dur
         self.left_dur = self.full_dur
 
+    def __repr__(self):
+        return "Car(id={}, avl={}, left={})".format(self.id, self.earliest_avl_time, self.left_dur)
+
 class Env:
     def __init__(self):
         self.file = 'data.csv'
@@ -184,3 +187,21 @@ class Env:
         out_df = out_df.loc[self.start_time:self.end_time]
         out_df.set_axis(list(range(1, out_df.shape[1] + 1)), axis=1, inplace=True)
         out_df.to_csv('output.csv')
+        self.schedule_df = out_df
+
+        self.serve_distribution = dict()
+        for hour, car_status in self.schedule_df.iterrows():
+            status_lt = list(car_status)
+            serve_num = status_lt.count(Sign.serve)
+            self.serve_distribution[hour] = serve_num
+
+    def check_validity(self):
+        lst = list(self.serve_distribution.values())
+        try:
+            first_two = lst.index(self.serve_num)  # 找到第一个2的位置
+            return len(lst) - first_two == lst.count(self.serve_num)  # 判断从那个位置到末尾的长度是否等于2的个数
+        except ValueError:
+            return False  # 如果列表中没有2，返回False
+
+
+
