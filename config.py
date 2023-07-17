@@ -5,7 +5,7 @@ class planHorizon:
 class serveInfo:
     serveNum = 1
 
-class CarSetting:
+class planeSetting:
     upload_dur = 1
     unpack_dur = 1
     prepare_dur = 8

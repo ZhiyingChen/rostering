@@ -1,15 +1,21 @@
-from data_structure import Env
+from config import planeSetting, planHorizon, serveInfo
+from data_structure import singlePlaneEnv
+from read_data import Input
 from time import time
+import logging
 
 if __name__ == '__main__':
 
-    st = time()
+    try:
+        st = time()
+        input_folder = 'input'
+        output_folder = 'output'
 
-    env = Env()
-    env.read_config()
-    env.dig_info()
-    env.get_car_schedule()
-    env.output()
-    print("The validity of this schedule is {}".format(env.check_validity()))
+        input = Input(input_folder=input_folder, output_folder=output_folder)
+        input.load_data()
 
-    print(time() - st)
+        print(time() - st)
+
+    except BaseException as e:
+        logging.error('run daily job fail:', exc_info=True)
+        raise e
