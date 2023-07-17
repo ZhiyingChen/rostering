@@ -10,7 +10,7 @@ class Input:
         self.input_folder = input_folder
         self.planes = dict()
         self.goods = dict()
-        self.plane_good_relation = dict()
+        self.plane_goods_relation = set()
         self.start_time = None
         self.end_time = None
         self.serve_num = None
@@ -26,7 +26,6 @@ class Input:
         self.end_time = param_dict[p.edTime]
         self.serve_num = param_dict[p.serveNum]
         logging.info("Finish loading params.")
-
 
     def load_plane_info(self):
         from utils import planeInfoHeader as pih
@@ -47,7 +46,7 @@ class Input:
         for idx, row in plane_df.iterrows():
             plane_type = ds.planeType(
                 type=row[pih.planeType],
-                max_num=row[pih.planeNum],
+                total_num=row[pih.planeNum],
                 upload_dur=row[pih.packDur],
                 leave_dur=row[pih.goDur],
                 serve_dur=row[pih.serveDur],
@@ -58,11 +57,61 @@ class Input:
             )
             planes[plane_type.type] = plane_type
 
-        logging.info("Finish loading plane type info.")
+        logging.info("Finish loading plane type info: {}".format(len(planes)))
         return planes
 
+    def load_goods_info(self):
+        from utils import goodsInfoHeader as gih
+
+        goods_df = pd.read_csv(self.input_folder + ul.GOODS_INFO_FILE,
+                               dtype={gih.goodsType: str, gih.frozenDur: int})
+
+        goods = dict()
+        for idx, row in goods_df.iterrows():
+            goods_type = ds.goodsType(
+                type=row[gih.goodsType],
+                frozen_dur=row[gih.frozenDur]
+            )
+            goods[goods_type.type] = goods_type
+
+        logging.info("Finish loading goods type info: {}".format(len(goods)))
+        return goods
+
+    def load_plane_goods_relation(self):
+        from utils import planeGoodsRelatHeader as pgh
+
+        plane_goods_relation_df = pd.read_csv(self.input_folder + ul.PLANE_GOODS_RELATION_FILE,
+                                              dtype={pgh.planeType: str, pgh.goodsType: str})
+        self.plane_goods_relation = set()
+        for idx, row in plane_goods_relation_df.iterrows():
+            if row[pgh.planeType] not in self.planes:
+                logging.error("Plane type {} is not in plane list".format(row[pgh.planeType]))
+                continue
+                
+            if row[pgh.goodsType] not in self.goods:
+                logging.error("Goods type {} is not in goods list".format(row[pgh.goodsType]))
+                continue
+
+            self.plane_goods_relation.add((row[pgh.planeType], row[pgh.goodsType]))
+            plane = self.planes[row[pgh.planeType]]
+            plane.capable_goods.add(row[pgh.goodsType])
+            
+            goods = self.goods[row[pgh.goodsType]]
+            goods.capable_planes.add(row[pgh.planeType])
+            
+        logging.info("Finish loading plane goods relation: {}".format(len(self.plane_goods_relation)))
 
     def load_data(self):
         self.load_params()
         self.planes = self.load_plane_info()
+        self.goods = self.load_goods_info()
+        self.load_plane_goods_relation()
+        logging.info("Finish loading data.")
 
+    def generate_max_serves4planes(self):
+        for p, plane_type in self.planes.items():
+            plane_type.generate_max_serve_num(stTime=self.start_time, edTime=self.end_time)
+
+    def generate_data(self):
+        self.load_data()
+        self.generate_max_serves4planes()

@@ -12,9 +12,9 @@ if __name__ == '__main__':
         output_folder = 'output'
 
         input = Input(input_folder=input_folder, output_folder=output_folder)
-        input.load_data()
+        input.generate_data()
 
-        print(time() - st)
+        logging.info('Total running time: {}'.format(time() - st))
 
     except BaseException as e:
         logging.error('run daily job fail:', exc_info=True)
