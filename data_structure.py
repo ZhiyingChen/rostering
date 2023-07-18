@@ -1,6 +1,7 @@
 from math import floor, ceil
 from config import CarSetting, planHorizon, serveInfo, Sign, paramHeader
 import pandas as pd
+import sys
 
 class Car:
     def __init__(self, id, t0, full_dur, left_dur,
@@ -44,55 +45,41 @@ class Car:
     def __repr__(self):
         return "Car(id={}, avl={}, left={})".format(self.id, self.earliest_avl_time, self.left_dur)
 
-class Env:
-    def __init__(self):
-        self.file = 'data.csv'
-        self.start_time = planHorizon.start_time
-        self.end_time = planHorizon.end_time
+class factorSolver:
+    def __init__(self, stTime, edTime, serveNum,
+                 upload_dur, unpack_dur, prepare_dur, leave_dur, return_dur, serve_dur, rest_dur, full_dur):
+        self.start_time = stTime
+        self.end_time = edTime
 
-        self.serve_num = serveInfo.serveNum
+        self.serve_num = serveNum
 
-        self.upload_dur = CarSetting.upload_dur
-        self.unpack_dur = CarSetting.unpack_dur
-        self.prepare_dur = CarSetting.prepare_dur
-        self.leave_dur = CarSetting.leave_dur
-        self.return_dur = CarSetting.return_dur
-        self.serve_dur = CarSetting.serve_dur
-        self.rest_dur = CarSetting.rest_dur
-        self.full_dur = CarSetting.full_dur
+        self.upload_dur = upload_dur
+        self.unpack_dur = unpack_dur
+        self.prepare_dur = prepare_dur
+        self.leave_dur = leave_dur
+        self.return_dur = return_dur
+        self.serve_dur = serve_dur
+        self.rest_dur = rest_dur
+        self.full_dur = full_dur
 
         self.car_dict = {}
 
-
-    def read_config(self):
-
-        df = pd.read_csv(self.file, dtype={paramHeader.paramName: str, paramHeader.paramVal: int})
-        config_dict = df.set_index(paramHeader.paramName)[paramHeader.paramVal].to_dict()
-
-        self.start_time = config_dict[paramHeader.stTime]
-        self.end_time = config_dict[paramHeader.edTime]
-
-        self.serve_num = config_dict[paramHeader.serveNum]
-        self.max_gap = ceil(self.serve_dur / self.serve_num)
-
-        self.upload_dur = config_dict[paramHeader.packDur]
-        self.unpack_dur = config_dict[paramHeader.unpackDur]
-        self.prepare_dur = config_dict[paramHeader.prepareDur]
-        self.leave_dur = config_dict[paramHeader.goDur]
-        self.return_dur = config_dict[paramHeader.returnDur]
-        self.serve_dur = config_dict[paramHeader.serveDur]
-        self.rest_dur = config_dict[paramHeader.restDur]
-
-        self.full_dur = config_dict[paramHeader.maxWorkDur]
-
     def dig_info(self):
+        if self.serve_num > self.serve_dur:
+            print("Serve number is larger than serve duration.")
+            sys.exit(-1)
+        if (self.serve_dur % self.serve_num) != 0:
+            print("Serve num {} is not a factor of serve dur {}.".format(self.serve_num, self.serve_dur))
+            sys.exit(-1)
+
+        self.max_gap = self.serve_dur / self.serve_num
+
         self.one_round_dur = self.upload_dur + self.leave_dur + self.serve_dur + \
                              self.return_dur + self.unpack_dur + self.prepare_dur
         self.continuous_round_num = floor(self.full_dur / self.one_round_dur)  # 保养之前可以连续跑几趟车
         self.interval = ceil(self.one_round_dur / self.serve_dur) * self.serve_dur  # 同一辆车的最小发车间隔
         self.rest_slope = ceil(self.rest_dur / self.interval) * self.one_round_dur  # 每两辆车之间需要错开的剩余总时间
 
-        self.max_gap = ceil(self.serve_dur / self.serve_num)
 
     def whether_car_avl(self, t):
         for c_id, car in self.car_dict.items():
@@ -197,11 +184,39 @@ class Env:
 
     def check_validity(self):
         lst = list(self.serve_distribution.values())
+        judge_lst = [x >= self.serve_num for x in lst]
+
         try:
-            first_two = lst.index(self.serve_num)  # 找到第一个2的位置
-            return len(lst) - first_two == lst.count(self.serve_num)  # 判断从那个位置到末尾的长度是否等于2的个数
+            first_true = judge_lst .index(True)
+            return len(judge_lst) - first_true == judge_lst.count(True)
         except ValueError:
-            return False  # 如果列表中没有2，返回False
+            return False
+
+
+class Solver:
+    def __init__(self, stTime, edTime, serveNum,
+                 upload_dur, unpack_dur, prepare_dur, leave_dur, return_dur, serve_dur, rest_dur, full_dur):
+
+        self.start_time = stTime
+        self.end_time = edTime
+
+        self.serve_num = serveNum
+
+        self.upload_dur = upload_dur
+        self.unpack_dur = unpack_dur
+        self.prepare_dur = prepare_dur
+        self.leave_dur = leave_dur
+        self.return_dur = return_dur
+        self.serve_dur = serve_dur
+        self.rest_dur = rest_dur
+        self.full_dur = full_dur
+
+        self.factors = set()
+
+        self.car_dict = {}
+
+    def find_all_factors(self):
+        pass
 
 
 
