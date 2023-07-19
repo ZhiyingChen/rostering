@@ -1,7 +1,8 @@
-from math import floor, ceil
+from math import floor, ceil, sqrt
 from config import CarSetting, planHorizon, serveInfo, Sign, paramHeader
 import pandas as pd
 import sys
+import copy
 
 class Car:
     def __init__(self, id, t0, full_dur, left_dur,
@@ -128,7 +129,7 @@ class factorSolver:
 
             t += self.max_gap
 
-    def output(self):
+    def get_car_distribution(self):
 
         record_dict = {}
         for c_id, car in self.car_dict.items():
@@ -173,7 +174,7 @@ class factorSolver:
         out_df.replace('', Sign.spare, inplace=True)
         out_df = out_df.loc[self.start_time:self.end_time]
         out_df.set_axis(list(range(1, out_df.shape[1] + 1)), axis=1, inplace=True)
-        out_df.to_csv('output.csv')
+
         self.schedule_df = out_df
 
         self.serve_distribution = dict()
@@ -181,6 +182,9 @@ class factorSolver:
             status_lt = list(car_status)
             serve_num = status_lt.count(Sign.serve)
             self.serve_distribution[hour] = serve_num
+
+    def output(self):
+        self.schedule_df.to_csv('output.csv')
 
     def check_validity(self):
         lst = list(self.serve_distribution.values())
@@ -192,6 +196,10 @@ class factorSolver:
         except ValueError:
             return False
 
+    def get_min_car_num(self):
+        self.dig_info()
+        self.get_car_schedule()
+        return len(self.car_dict)
 
 class Solver:
     def __init__(self, stTime, edTime, serveNum,
@@ -211,12 +219,167 @@ class Solver:
         self.rest_dur = rest_dur
         self.full_dur = full_dur
 
-        self.factors = set()
+        self.factors = list()
+        self.factor_car_num = dict()
+        self.factor_car_dict = dict()
+        self.factor_combination = dict()
 
-        self.car_dict = {}
+        self.car_dict = dict()
+        self.schedule_df = dict()
+        self.serve_distribution = dict()
 
     def find_all_factors(self):
-        pass
+        factors = []
+        for_times = int(sqrt(self.serve_dur))
+        for i in range(1, for_times + 1):
+            if self.serve_dur % i == 0:
+                factors.append(i)
+                t = int(self.serve_dur / i)
+                if not t == i:
+                    factors.append(t)
+
+        factors = sorted(factors)
+        return factors
+
+    def get_factor_car_num(self):
+        factor_car_num = {}
+        factor_car_dict = {}
+        factors = [f for f in self.factors if f <= self.serve_num]
+        for f in factors:
+            fSolver = factorSolver(stTime=self.start_time, edTime=self.end_time,
+                                  serveNum=f,
+                                  upload_dur=self.upload_dur, unpack_dur=self.unpack_dur,
+                                  prepare_dur=self.prepare_dur,
+                                  leave_dur=self.leave_dur, return_dur=self.leave_dur,
+                                  serve_dur=self.serve_dur,
+                                  rest_dur=self.rest_dur, full_dur=self.full_dur)
+            min_car = fSolver.get_min_car_num()
+            factor_car_num.update({f: min_car})
+            factor_car_dict.update({f: fSolver.car_dict})
+        return factor_car_num, factor_car_dict
+
+    def find_factor_combination(self):
+        factors = list(self.factor_car_num.keys())
+        factors = sorted([f for f in factors if f <= self.serve_num], reverse=True)
+
+        factor_combination = dict()
+
+        left = self.serve_num
+        for f in factors:
+            if left == 0:
+                break
+            times = int(left / f)
+
+            factor_combination[f] = times
+            left -= times * f
+
+        factor_multiples = sum(k*v for k, v in factor_combination.items())
+        if factor_multiples != self.serve_num:
+            sys.exit(-1)
+            print("Something went wrong with factor combination.")
+
+        return factor_combination
+
+    def generate_min_car_num(self):
+        self.generate_car_schedule()
+        return len(self.car_dict)
+
+    def generate_car_schedule(self):
+        if self.serve_dur > self.serve_num and (self.serve_dur % self.serve_num) == 0:
+            fSolver = factorSolver(stTime=self.start_time, edTime=self.end_time,
+                                  serveNum=self.serve_num,
+                                  upload_dur=self.upload_dur, unpack_dur=self.unpack_dur,
+                                  prepare_dur=self.prepare_dur,
+                                  leave_dur=self.leave_dur, return_dur=self.leave_dur,
+                                  serve_dur=self.serve_dur,
+                                  rest_dur=self.rest_dur, full_dur=self.full_dur)
+            min_car = fSolver.get_min_car_num()
+            self.car_dict = fSolver.car_dict
+            return
+
+        self.factors = self.find_all_factors()
+        self.factor_car_num, self.factor_car_dict = self.get_factor_car_num()
+        self.factor_combination = self.find_factor_combination()
+
+        c_id = 1
+        car_dict = {}
+        for f, times in self.factor_combination.items():
+            if times < 1:
+                continue
+            for k in range(times):
+                new_car_dict = copy.deepcopy(self.factor_car_dict[f])
+                for new_car_id, car in new_car_dict.items():
+                    car.id = c_id
+                    car_dict.update({c_id: car})
+                    c_id += 1
+        self.car_dict = car_dict
+
+    def generate_car_distribution(self):
+
+        record_dict = {}
+        for c_id, car in self.car_dict.items():
+            record = {k: '' for k in range(self.start_time, self.end_time + 1)}
+            for t, event in car.schedule.items():
+                if 'serve' in event.keys():
+                    serve_dur = event[
+                                    'serve'] - car.upload_dur - car.leave_dur - car.return_dur - car.unpack_dur - car.prepare_dur
+                    curr_t = t
+
+                    for i in range(car.upload_dur):
+                        record[curr_t] = Sign.upload
+                        curr_t += 1
+
+                    for i in range(car.leave_dur):
+                        record[curr_t] = Sign.leave
+                        curr_t += 1
+
+                    for i in range(serve_dur):
+                        record[curr_t] = Sign.serve
+                        curr_t += 1
+
+                    for i in range(car.return_dur):
+                        record[curr_t] = Sign.back
+                        curr_t += 1
+                    for i in range(car.unpack_dur):
+                        record[curr_t] = Sign.unpack
+                        curr_t += 1
+                    for i in range(car.prepare_dur):
+                        record[curr_t] = Sign.prepare
+                        curr_t += 1
+
+                elif 'rest' in event.keys():
+                    curr_t = t
+                    for i in range(car.rest_dur):
+                        record[curr_t] = Sign.fix
+                        curr_t += 1
+
+            record_dict[c_id] = record
+
+        out_df = pd.DataFrame(record_dict, dtype=object)
+        out_df.replace('', Sign.spare, inplace=True)
+        out_df = out_df.loc[self.start_time:self.end_time]
+        out_df.set_axis(list(range(1, out_df.shape[1] + 1)), axis=1, inplace=True)
+
+        self.schedule_df = out_df
+
+        self.serve_distribution = dict()
+        for hour, car_status in self.schedule_df.iterrows():
+            status_lt = list(car_status)
+            serve_num = status_lt.count(Sign.serve)
+            self.serve_distribution[hour] = serve_num
+
+    def output_df(self):
+        self.schedule_df.to_csv('output.csv')
+
+    def check_validity4dist(self):
+        lst = list(self.serve_distribution.values())
+        judge_lst = [x >= self.serve_num for x in lst]
+
+        try:
+            first_true = judge_lst .index(True)
+            return len(judge_lst) - first_true == judge_lst.count(True)
+        except ValueError:
+            return False
 
 
 
