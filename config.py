@@ -3,7 +3,7 @@ class planHorizon:
     end_time = 60*24
 
 class serveInfo:
-    serveNum = 1
+    serveNum = 7
 
 class CarSetting:
     upload_dur = 1
