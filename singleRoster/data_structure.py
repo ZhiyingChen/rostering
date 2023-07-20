@@ -1,5 +1,5 @@
+from . import config as cg
 from math import floor, ceil, sqrt
-from config import CarSetting, planHorizon, serveInfo, Sign, paramHeader
 import pandas as pd
 import sys
 import copy
@@ -129,73 +129,6 @@ class factorSolver:
 
             t += self.max_gap
 
-    def get_car_distribution(self):
-
-        record_dict = {}
-        for c_id, car in self.car_dict.items():
-            record = {k: '' for k in range(self.start_time, self.end_time + 1)}
-            for t, event in car.schedule.items():
-                if 'serve' in event.keys():
-                    serve_dur = event[
-                                    'serve'] - car.upload_dur - car.leave_dur - car.return_dur - car.unpack_dur - car.prepare_dur
-                    curr_t = t
-
-                    for i in range(car.upload_dur):
-                        record[curr_t] = Sign.upload
-                        curr_t += 1
-
-                    for i in range(car.leave_dur):
-                        record[curr_t] = Sign.leave
-                        curr_t += 1
-
-                    for i in range(serve_dur):
-                        record[curr_t] = Sign.serve
-                        curr_t += 1
-
-                    for i in range(car.return_dur):
-                        record[curr_t] = Sign.back
-                        curr_t += 1
-                    for i in range(car.unpack_dur):
-                        record[curr_t] = Sign.unpack
-                        curr_t += 1
-                    for i in range(car.prepare_dur):
-                        record[curr_t] = Sign.prepare
-                        curr_t += 1
-
-                elif 'rest' in event.keys():
-                    curr_t = t
-                    for i in range(car.rest_dur):
-                        record[curr_t] = Sign.fix
-                        curr_t += 1
-
-            record_dict[c_id] = record
-
-        out_df = pd.DataFrame(record_dict, dtype=object)
-        out_df.replace('', Sign.spare, inplace=True)
-        out_df = out_df.loc[self.start_time:self.end_time]
-        out_df.set_axis(list(range(1, out_df.shape[1] + 1)), axis=1, inplace=True)
-
-        self.schedule_df = out_df
-
-        self.serve_distribution = dict()
-        for hour, car_status in self.schedule_df.iterrows():
-            status_lt = list(car_status)
-            serve_num = status_lt.count(Sign.serve)
-            self.serve_distribution[hour] = serve_num
-
-    def output(self):
-        self.schedule_df.to_csv('output.csv')
-
-    def check_validity(self):
-        lst = list(self.serve_distribution.values())
-        judge_lst = [x >= self.serve_num for x in lst]
-
-        try:
-            first_true = judge_lst .index(True)
-            return len(judge_lst) - first_true == judge_lst.count(True)
-        except ValueError:
-            return False
-
     def get_min_car_num(self):
         self.dig_info()
         self.get_car_schedule()
@@ -204,7 +137,7 @@ class factorSolver:
 class Solver:
     def __init__(self, stTime, edTime, serveNum,
                  upload_dur, unpack_dur, prepare_dur, leave_dur, return_dur, serve_dur, rest_dur, full_dur):
-
+        self.file = cg.FILENAME
         self.start_time = stTime
         self.end_time = edTime
 
@@ -227,6 +160,26 @@ class Solver:
         self.car_dict = dict()
         self.schedule_df = dict()
         self.serve_distribution = dict()
+
+    def read_config(self):
+
+        df = pd.read_csv(self.file, dtype={cg.paramHeader.paramName: str, cg.paramHeader.paramVal: int})
+        config_dict = df.set_index(cg.paramHeader.paramName)[cg.paramHeader.paramVal].to_dict()
+
+        self.start_time = config_dict[cg.paramHeader.stTime]
+        self.end_time = config_dict[cg.paramHeader.edTime]
+
+        self.serve_num = config_dict[cg.paramHeader.serveNum]
+
+        self.upload_dur = config_dict[cg.paramHeader.packDur]
+        self.unpack_dur = config_dict[cg.paramHeader.unpackDur]
+        self.prepare_dur = config_dict[cg.paramHeader.prepareDur]
+        self.leave_dur = config_dict[cg.paramHeader.goDur]
+        self.return_dur = config_dict[cg.paramHeader.returnDur]
+        self.serve_dur = config_dict[cg.paramHeader.serveDur]
+        self.rest_dur = config_dict[cg.paramHeader.restDur]
+
+        self.full_dur = config_dict[cg.paramHeader.maxWorkDur]
 
     def find_all_factors(self):
         factors = []
@@ -281,8 +234,25 @@ class Solver:
         return factor_combination
 
     def generate_min_car_num(self):
-        self.generate_car_schedule()
-        return len(self.car_dict)
+        if self.serve_dur > self.serve_num and (self.serve_dur % self.serve_num) == 0:
+            fSolver = factorSolver(stTime=self.start_time, edTime=self.end_time,
+                                   serveNum=self.serve_num,
+                                   upload_dur=self.upload_dur, unpack_dur=self.unpack_dur,
+                                   prepare_dur=self.prepare_dur,
+                                   leave_dur=self.leave_dur, return_dur=self.leave_dur,
+                                   serve_dur=self.serve_dur,
+                                   rest_dur=self.rest_dur, full_dur=self.full_dur)
+            min_car = fSolver.get_min_car_num()
+            return min_car
+
+        self.factors = self.find_all_factors()
+        self.factor_car_num, self.factor_car_dict = self.get_factor_car_num()
+        self.factor_combination = self.find_factor_combination()
+
+        min_car = 0
+        for f, times in self.factor_combination.items():
+            min_car += times * self.factor_car_num[f]
+        return min_car
 
     def generate_car_schedule(self):
         if self.serve_dur > self.serve_num and (self.serve_dur % self.serve_num) == 0:
@@ -301,17 +271,16 @@ class Solver:
         self.factor_car_num, self.factor_car_dict = self.get_factor_car_num()
         self.factor_combination = self.find_factor_combination()
 
-        c_id = 1
+        c_id = 0
         car_dict = {}
         for f, times in self.factor_combination.items():
             if times < 1:
                 continue
-            for k in range(times):
-                new_car_dict = copy.deepcopy(self.factor_car_dict[f])
-                for new_car_id, car in new_car_dict.items():
-                    car.id = c_id
-                    car_dict.update({c_id: car})
-                    c_id += 1
+            f_car_dict = copy.deepcopy(self.factor_car_dict[f])
+            new_dict = {c_id + k + i * len(f_car_dict): v for i in range(times) for k, v in f_car_dict.items()}
+            c_id += len(new_dict)
+            car_dict.update(new_dict)
+
         self.car_dict = car_dict
 
     def generate_car_distribution(self):
@@ -326,37 +295,37 @@ class Solver:
                     curr_t = t
 
                     for i in range(car.upload_dur):
-                        record[curr_t] = Sign.upload
+                        record[curr_t] = cg.Sign.upload
                         curr_t += 1
 
                     for i in range(car.leave_dur):
-                        record[curr_t] = Sign.leave
+                        record[curr_t] = cg.Sign.leave
                         curr_t += 1
 
                     for i in range(serve_dur):
-                        record[curr_t] = Sign.serve
+                        record[curr_t] = cg.Sign.serve
                         curr_t += 1
 
                     for i in range(car.return_dur):
-                        record[curr_t] = Sign.back
+                        record[curr_t] = cg.Sign.back
                         curr_t += 1
                     for i in range(car.unpack_dur):
-                        record[curr_t] = Sign.unpack
+                        record[curr_t] = cg.Sign.unpack
                         curr_t += 1
                     for i in range(car.prepare_dur):
-                        record[curr_t] = Sign.prepare
+                        record[curr_t] = cg.Sign.prepare
                         curr_t += 1
 
                 elif 'rest' in event.keys():
                     curr_t = t
                     for i in range(car.rest_dur):
-                        record[curr_t] = Sign.fix
+                        record[curr_t] = cg.Sign.fix
                         curr_t += 1
 
             record_dict[c_id] = record
 
         out_df = pd.DataFrame(record_dict, dtype=object)
-        out_df.replace('', Sign.spare, inplace=True)
+        out_df.replace('', cg.Sign.spare, inplace=True)
         out_df = out_df.loc[self.start_time:self.end_time]
         out_df.set_axis(list(range(1, out_df.shape[1] + 1)), axis=1, inplace=True)
 
@@ -365,7 +334,7 @@ class Solver:
         self.serve_distribution = dict()
         for hour, car_status in self.schedule_df.iterrows():
             status_lt = list(car_status)
-            serve_num = status_lt.count(Sign.serve)
+            serve_num = status_lt.count(cg.Sign.serve)
             self.serve_distribution[hour] = serve_num
 
     def output_df(self):

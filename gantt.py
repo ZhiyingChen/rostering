@@ -68,7 +68,7 @@ def create_draw_defination():
 def draw_prepare():
     df = create_draw_defination()
     return ff.create_gantt(df, colors=activityMap, index_col='Resource',
-                           title='排产结果展示', show_colorbar=True,
+                           title='display', show_colorbar=True,
                            group_tasks=True, data=n_duration_time,
                            showgrid_x=True, showgrid_y=True)
 

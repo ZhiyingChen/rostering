@@ -1,5 +1,5 @@
-import data_structure as ds
-import config as cg
+import singleRoster.data_structure as ds
+import singleRoster.config as cg
 from time import time
 
 if __name__ == '__main__':
@@ -11,8 +11,10 @@ if __name__ == '__main__':
             leave_dur=cg.CarSetting.leave_dur, return_dur=cg.CarSetting.leave_dur, serve_dur=cg.CarSetting.serve_dur,
                rest_dur=cg.CarSetting.rest_dur, full_dur=cg.CarSetting.full_dur)
 
+    env.read_config()
     env.generate_car_schedule()
     env.generate_car_distribution()
     print("The validity of this schedule is {}".format(env.check_validity4dist()))
 
+    env.output_df()
     print(time() - st)
