@@ -1,3 +1,5 @@
+FILENAME = 'data.csv'
+
 class planHorizon:
     start_time = 0
     end_time = 60*24
