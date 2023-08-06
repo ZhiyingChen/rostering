@@ -16,5 +16,5 @@ if __name__ == '__main__':
     env.generate_car_distribution()
     print("The validity of this schedule is {}".format(env.check_validity4dist()))
 
-    env.output_df()
+    # env.output_df()
     print(time() - st)
