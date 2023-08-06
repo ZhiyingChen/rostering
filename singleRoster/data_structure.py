@@ -67,20 +67,18 @@ class factorSolver:
 
     def dig_info(self):
         if self.serve_num > self.serve_dur:
-            print("Serve number is larger than serve duration.")
-            sys.exit(-1)
+            raise BaseException("Serve number is larger than serve duration.")
+
         if (self.serve_dur % self.serve_num) != 0:
-            print("Serve num {} is not a factor of serve dur {}.".format(self.serve_num, self.serve_dur))
-            sys.exit(-1)
+            raise BaseException("Serve num {} is not a factor of serve dur {}.".format(self.serve_num, self.serve_dur))
 
         self.max_gap = self.serve_dur / self.serve_num
 
         self.one_round_dur = self.upload_dur + self.leave_dur + self.serve_dur + \
                              self.return_dur + self.unpack_dur + self.prepare_dur
         self.continuous_round_num = floor(self.full_dur / self.one_round_dur)  # 保养之前可以连续跑几趟车
-        self.interval = ceil(self.one_round_dur / self.serve_dur) * self.serve_dur  # 同一辆车的最小发车间隔
-        self.rest_slope = ceil(self.rest_dur / self.interval) * self.one_round_dur  # 每两辆车之间需要错开的剩余总时间
-
+        self.interval = ceil(self.one_round_dur / self.max_gap) * self.max_gap # 同一辆车的最小发车间隔
+        self.rest_slope = min(ceil(self.rest_dur / self.interval) * self.one_round_dur, self.full_dur)# 每两辆车之间需要错开的剩余总时间
 
     def whether_car_avl(self, t):
         for c_id, car in self.car_dict.items():
@@ -102,7 +100,7 @@ class factorSolver:
     def get_car_schedule(self):
         t = self.start_time
         id = 1
-        last_dur = self.rest_slope
+        last_dur = 0
         while t <= self.end_time:
             avl = self.whether_car_avl(t)
             if avl:
@@ -111,10 +109,11 @@ class factorSolver:
                 last_dur = car.left_dur
                 car.serve_and_update(t)
             else:
-                if last_dur + self.rest_slope > self.full_dur:
-                    last_dur = (last_dur + self.rest_slope) % self.full_dur
+                if floor(last_dur / self.rest_slope) * self.rest_slope + self.rest_slope > self.full_dur:
+                    last_dur = self.rest_slope
                 else:
-                    last_dur += self.rest_slope
+                    last_dur = floor(last_dur / self.rest_slope) * self.rest_slope + self.rest_slope
+
 
                 new_car = Car(id=id, t0=t, full_dur=self.full_dur, left_dur=last_dur,
                               upload_dur=self.upload_dur, leave_dur=self.leave_dur,
