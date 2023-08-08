@@ -31,7 +31,7 @@ class Car:
         return False
 
     def serve_and_update(self, curr_t):
-        self.schedule[curr_t] = {'serve': (self.upload_dur + self.leave_dur + self.serve_dur + self.return_dur + self.unpack_dur + self.prepare_dur)}
+        self.schedule[curr_t] = {cg.actionName.serve: (self.upload_dur + self.leave_dur + self.serve_dur + self.return_dur + self.unpack_dur + self.prepare_dur)}
         self.left_dur = self.left_dur - (self.upload_dur + self.leave_dur + self.serve_dur + self.return_dur + self.unpack_dur + self.prepare_dur)
         self.earliest_avl_time = curr_t + (self.upload_dur + self.leave_dur + self.serve_dur + self.return_dur + self.unpack_dur + self.prepare_dur)
 
@@ -39,7 +39,7 @@ class Car:
             self.rest_and_update(self.earliest_avl_time)
 
     def rest_and_update(self, curr_t):
-        self.schedule[curr_t] = {'rest': self.rest_dur}
+        self.schedule[curr_t] = {cg.actionName.rest: self.rest_dur}
         self.earliest_avl_time = curr_t + self.rest_dur
         self.left_dur = self.full_dur
 
@@ -295,9 +295,9 @@ class Solver:
         for c_id, car in self.car_dict.items():
             record = {k: '' for k in range(self.start_time, self.end_time + 1)}
             for t, event in car.schedule.items():
-                if 'serve' in event.keys():
+                if cg.actionName.serve in event.keys():
                     serve_dur = event[
-                                    'serve'] - car.upload_dur - car.leave_dur - car.return_dur - car.unpack_dur - car.prepare_dur
+                                    cg.actionName.serve] - car.upload_dur - car.leave_dur - car.return_dur - car.unpack_dur - car.prepare_dur
                     curr_t = t
 
                     for i in range(car.upload_dur):
@@ -322,7 +322,7 @@ class Solver:
                         record[curr_t] = cg.Sign.prepare
                         curr_t += 1
 
-                elif 'rest' in event.keys():
+                elif cg.actionName.rest in event.keys():
                     curr_t = t
                     for i in range(car.rest_dur):
                         record[curr_t] = cg.Sign.fix
