@@ -41,3 +41,7 @@ class Sign:
     serve = '2'
     fix = '6'
     spare = '7'
+
+class actionName:
+    serve = 'serve'
+    rest = 'rest'
