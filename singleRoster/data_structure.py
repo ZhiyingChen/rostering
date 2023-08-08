@@ -76,6 +76,10 @@ class factorSolver:
 
         self.one_round_dur = self.upload_dur + self.leave_dur + self.serve_dur + \
                              self.return_dur + self.unpack_dur + self.prepare_dur
+
+        if self.full_dur < self.one_round_dur:
+            raise BaseException("Full dur {} is smaller than one round dur {}".format(self.full_dur, self.one_round_dur))
+
         self.continuous_round_num = floor(self.full_dur / self.one_round_dur)  # 保养之前可以连续跑几趟车
         self.interval = ceil(self.one_round_dur / self.max_gap) * self.max_gap # 同一辆车的最小发车间隔
         self.rest_slope = min(ceil(self.rest_dur / self.interval) * self.one_round_dur, self.full_dur)# 每两辆车之间需要错开的剩余总时间
@@ -100,7 +104,7 @@ class factorSolver:
     def get_car_schedule(self):
         t = self.start_time
         id = 1
-        last_dur = 0
+        last_dur = self.rest_slope
         while t <= self.end_time:
             avl = self.whether_car_avl(t)
             if avl:
@@ -109,10 +113,13 @@ class factorSolver:
                 last_dur = car.left_dur
                 car.serve_and_update(t)
             else:
-                if floor(last_dur / self.rest_slope) * self.rest_slope + self.rest_slope > self.full_dur:
-                    last_dur = self.rest_slope
+                if self.rest_slope != 0:
+                    if floor(last_dur / self.rest_slope) * self.rest_slope + self.rest_slope > self.full_dur:
+                        last_dur = self.rest_slope
+                    else:
+                        last_dur = floor(last_dur / self.rest_slope) * self.rest_slope + self.rest_slope
                 else:
-                    last_dur = floor(last_dur / self.rest_slope) * self.rest_slope + self.rest_slope
+                    last_dur = self.full_dur
 
 
                 new_car = Car(id=id, t0=t, full_dur=self.full_dur, left_dur=last_dur,
