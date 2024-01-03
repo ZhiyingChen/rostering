@@ -1,5 +1,5 @@
 from . import config as cg
-from .factorSolver import FactorSolver
+from .factor_solver import FactorSolver
 from math import sqrt
 import pandas as pd
 import sys
