@@ -198,7 +198,7 @@ class Solver:
         out_df = pd.DataFrame(record_dict, dtype=object)
         out_df.replace('', cg.Sign.spare, inplace=True)
         out_df = out_df.loc[self.start_time:self.end_time]
-        out_df.set_axis(list(range(1, out_df.shape[1] + 1)), axis=1, inplace=True)
+        out_df = out_df.set_axis(list(range(1, out_df.shape[1] + 1)), axis=1)
 
         self.schedule_df = out_df
 
