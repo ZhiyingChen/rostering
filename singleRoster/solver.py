@@ -6,8 +6,13 @@ import sys
 import copy
 
 class Solver:
-    def __init__(self, stTime, edTime, serveNum,
-                 upload_dur, unpack_dur, prepare_dur, leave_dur, return_dur, serve_dur, rest_dur, full_dur):
+    def __init__(
+            self,
+            stTime, edTime, serveNum,
+            upload_dur, unpack_dur, prepare_dur, leave_dur, return_dur, serve_dur, rest_dur, full_dur,
+            load_from_file=True,
+            config_df = None
+    ):
         self.file = cg.FILENAME
         self.start_time = stTime
         self.end_time = edTime
@@ -32,9 +37,18 @@ class Solver:
         self.schedule_df = dict()
         self.serve_distribution = dict()
 
-    def read_config(self):
+        self.load_from_file = load_from_file
+        self.config_df = config_df
 
-        df = pd.read_csv(self.file, dtype={cg.paramHeader.paramName: str, cg.paramHeader.paramVal: int})
+    def read_config(
+            self
+    ):
+
+        if self.load_from_file:
+            df = pd.read_csv(self.file, dtype={cg.paramHeader.paramName: str, cg.paramHeader.paramVal: int})
+        else:
+            df = self.config_df
+
         config_dict = df.set_index(cg.paramHeader.paramName)[cg.paramHeader.paramVal].to_dict()
 
         self.start_time = config_dict[cg.paramHeader.stTime]
@@ -209,7 +223,10 @@ class Solver:
             self.serve_distribution[hour] = serve_num
 
     def output_df(self):
+        if not self.load_from_file:
+            return self.schedule_df
         self.schedule_df.to_csv('output.csv')
+        return self.schedule_df
 
     def check_validity4dist(self):
         lst = list(self.serve_distribution.values())
