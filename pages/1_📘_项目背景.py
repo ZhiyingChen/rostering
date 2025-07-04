@@ -1,4 +1,5 @@
 import streamlit as st
+from web import function
 
 # 页面设置
 st.set_page_config(page_title="汽车轮转与维修调度 - 项目文档", layout="wide")
@@ -23,5 +24,7 @@ st.markdown("""
     - 服务时间计划为连续 30 天（720 小时）
     - 目标：最小化所需车辆数量，并排出每辆车的任务甘特图
 """)
+
+function.render_footer()
 
 
