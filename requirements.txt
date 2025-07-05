@@ -1,3 +1,5 @@
+plotly
 altair
 pandas
 streamlit
+

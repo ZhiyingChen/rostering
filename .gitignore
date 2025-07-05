@@ -1,0 +1,11 @@
+__pycache__
+.idea
+solution.csv
+output.csv
+greedy_output.csv
+solutions.zip
+甘特数据存储格式.csv
+build
+dist
+*.spec
+*.html
