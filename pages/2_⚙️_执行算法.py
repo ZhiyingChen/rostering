@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
-from web import function
+from web import function, gantt
 from singleRoster import config as cg
 from singleRoster.solver import Solver
 
@@ -108,7 +108,7 @@ if st.button("🚀 运行算法"):
             st.error(f"❌ 算法运行出错：{e}")
 
         st.markdown("---")
-        st.header("📊 输出结果")
+        st.header("📊 输出结果: 至少需要{}辆车".format(len(result_df.columns)))
 
         with st.expander("📄 车辆和执行结果"):
             st.dataframe(result_df)
@@ -118,6 +118,8 @@ if st.button("🚀 运行算法"):
                 file_name="车辆和执行结果.csv",
                 mime="text/csv"
             )
+
+        gantt.plot_gantt_bar(result_df)
 
 
 function.render_footer()
