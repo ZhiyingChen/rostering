@@ -17,15 +17,16 @@ activity_map = {
 
 # 中文名 → 颜色
 activity_color_map = {
-    "装货时间": "#41337A",
-    "卸货时间": "#4F3C7A",
-    "备货时间": "#5D457A",
-    "去程时间": "#8A2932",
-    "返程时间": "#8A2933",
+    "装货时间": "#3B3B98",
+    "卸货时间": "#4B4BA1",
+    "备货时间": "#5C5CAA",
+    "去程时间": "#FF6B6B",
+    "返程时间": "#FF8787",
     "服务时间": "#78FF04",
     "维修时间": "#A29BFE",
     "空闲时间": "#E5E5E5",
 }
+
 
 def plot_gantt_bar(timeline_df: pd.DataFrame):
     fig = go.Figure()
@@ -85,4 +86,3 @@ def plot_gantt_bar(timeline_df: pd.DataFrame):
         font=dict(family="Microsoft YaHei, sans-serif", size=13)
     )
     st.plotly_chart(fig, use_container_width=True)
-
