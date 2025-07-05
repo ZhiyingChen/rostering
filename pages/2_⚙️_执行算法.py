@@ -118,8 +118,8 @@ if st.button("🚀 运行算法"):
                 file_name="车辆和执行结果.csv",
                 mime="text/csv"
             )
-
-        gantt.plot_gantt_bar(result_df)
+        with st.spinner("正在绘制甘特图..."):
+            gantt.plot_gantt_bar(result_df)
 
 
 function.render_footer()
