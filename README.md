@@ -46,3 +46,4 @@ To run project:
     1. put your input data in data.csv, you can adjust parameters.
     2. execute python main.py
     3. execute python gantt.py to draw gantt pics of of your result.
+
