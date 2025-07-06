@@ -94,7 +94,7 @@ if st.button("🚀 运行算法"):
                          serve_dur=cg.CarSetting.serve_dur,
                          rest_dur=cg.CarSetting.rest_dur, full_dur=cg.CarSetting.full_dur,
                          load_from_file=False,
-                         config_df=global_df
+                         config_df=edited_global_df
                          )
 
             env.read_config()
