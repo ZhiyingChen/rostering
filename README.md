@@ -1,3 +1,16 @@
+---
+title: Rostering App
+emoji: 🚀
+colorFrom: red
+colorTo: red
+sdk: docker
+tags:
+- streamlit
+pinned: false
+short_description: Streamlit template space
+license: mit
+---
+
 # Rostering
     
  **Problem**

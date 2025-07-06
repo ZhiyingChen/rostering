@@ -5,7 +5,11 @@ output.csv
 greedy_output.csv
 solutions.zip
 甘特数据存储格式.csv
-build
-dist
 *.spec
 *.html
+# 忽略打包和二进制文件
+dist/
+build/
+*.exe
+*.pkg
+

@@ -1,2 +1,6 @@
-pandas==1.2.5
-plotly==5.14.1
+plotly
+altair
+pandas
+streamlit
+
+
