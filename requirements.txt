@@ -1,0 +1,6 @@
+plotly
+altair
+pandas
+streamlit
+
+
