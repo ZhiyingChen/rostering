@@ -49,6 +49,22 @@
         </div>
         <div class="rotation-legend"><span><i class="route-dot blue"></i>出车准备</span><span><i class="route-dot green"></i>服务覆盖</span><span><i class="route-dot orange"></i>返回处理</span><span><i class="route-dot dark"></i>维修不可用</span></div>
       </div>
+      <div class="handoff-visual" aria-labelledby="handoffTitle">
+        <div class="visual-caption"><span>STAGGERED HANDOFF</span><strong id="handoffTitle">服务车辆不是一辆车连续值守，而是多辆车按 6 小时节拍接力</strong><small>截取真实示例求解结果的前 24 小时；三行是前三辆车的实际状态</small></div>
+        <div class="handoff-chart">
+          <svg viewBox="0 0 900 300" role="img" aria-label="车辆一、二、三在前二十四小时错峰执行任务并维持服务覆盖">
+            <g class="chart-grid" stroke="#dbe5ee" stroke-width="1"><path d="M120 40V250M210 40V250M300 40V250M390 40V250M480 40V250M570 40V250M660 40V250M750 40V250M840 40V250"/></g>
+            <g class="chart-axis" fill="#63788d" font-size="11" text-anchor="middle"><text x="120" y="28">0h</text><text x="210" y="28">3h</text><text x="300" y="28">6h</text><text x="390" y="28">9h</text><text x="480" y="28">12h</text><text x="570" y="28">15h</text><text x="660" y="28">18h</text><text x="750" y="28">21h</text><text x="840" y="28">24h</text></g>
+            <g class="vehicle-labels" fill="#12263a" font-size="12" font-weight="700"><text x="35" y="78">车辆 1</text><text x="35" y="128">车辆 2</text><text x="35" y="178">车辆 3</text><text x="35" y="230">服务覆盖</text></g>
+            <g class="roster-row"><rect class="load" x="120" y="55" width="30" height="30"/><rect class="road" x="150" y="55" width="60" height="30"/><rect class="serve" x="210" y="55" width="180" height="30"/><rect class="road" x="390" y="55" width="60" height="30"/><rect class="load" x="450" y="55" width="150" height="30"/><rect class="idle" x="600" y="55" width="60" height="30"/><rect class="load" x="660" y="55" width="30" height="30"/><rect class="road" x="690" y="55" width="60" height="30"/><rect class="serve" x="750" y="55" width="90" height="30"/></g>
+            <g class="roster-row"><rect class="idle" x="120" y="105" width="180" height="30"/><rect class="load" x="300" y="105" width="30" height="30"/><rect class="road" x="330" y="105" width="60" height="30"/><rect class="serve" x="390" y="105" width="180" height="30"/><rect class="road" x="570" y="105" width="60" height="30"/><rect class="load" x="630" y="105" width="150" height="30"/><rect class="idle" x="780" y="105" width="60" height="30"/></g>
+            <g class="roster-row"><rect class="idle" x="120" y="155" width="360" height="30"/><rect class="load" x="480" y="155" width="30" height="30"/><rect class="road" x="510" y="155" width="60" height="30"/><rect class="serve" x="570" y="155" width="180" height="30"/><rect class="road" x="750" y="155" width="60" height="30"/><rect class="load" x="810" y="155" width="30" height="30"/></g>
+            <g class="coverage-row"><rect class="gap" x="120" y="207" width="90" height="28" rx="4"/><rect class="covered" x="210" y="207" width="630" height="28" rx="4"/><text x="165" y="226">启动准备</text><text x="525" y="226">每小时 1 辆车在服务区</text></g>
+            <g class="handoff-arrows" fill="none" stroke="#0e9384" stroke-width="2"><path d="M385 93l5 7 5-7"/><path d="M565 143l5 7 5-7"/></g>
+          </svg>
+        </div>
+        <div class="coverage-explain"><strong>覆盖口径</strong><p>轮转从 0h 开始发车，首车需先完成装货 1h 和去程 2h，因此 0–3h 尚无车辆到达服务区，形成真实的 3 车·小时启动缺口；从 3h 起，车辆 1、2、3 每隔 6 小时进入服务阶段，随后保持连续覆盖。</p></div>
+      </div>
     </section>
 
     <section class="example-scale" aria-labelledby="scaleTitle">
