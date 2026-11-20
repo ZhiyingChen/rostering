@@ -1,0 +1,21 @@
+[Unit]
+Description=Rostering Vehicle Rotation API
+After=network.target
+[Service]
+Type=simple
+User=rostering
+Group=rostering
+WorkingDirectory=/opt/rostering_app
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONUTF8=1
+ExecStart=/opt/rostering_app/.venv/bin/uvicorn api.main:app --host 127.0.0.1 --port 8091 --workers 1
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=512M
+TasksMax=32
+[Install]
+WantedBy=multi-user.target

@@ -88,7 +88,7 @@ class Solver:
                                   serveNum=f,
                                   upload_dur=self.upload_dur, unpack_dur=self.unpack_dur,
                                   prepare_dur=self.prepare_dur,
-                                  leave_dur=self.leave_dur, return_dur=self.leave_dur,
+                                  leave_dur=self.leave_dur, return_dur=self.return_dur,
                                   serve_dur=self.serve_dur,
                                   rest_dur=self.rest_dur, full_dur=self.full_dur)
             min_car = fSolver.get_min_car_num()
@@ -124,7 +124,7 @@ class Solver:
                                    serveNum=self.serve_num,
                                    upload_dur=self.upload_dur, unpack_dur=self.unpack_dur,
                                    prepare_dur=self.prepare_dur,
-                                   leave_dur=self.leave_dur, return_dur=self.leave_dur,
+                                   leave_dur=self.leave_dur, return_dur=self.return_dur,
                                    serve_dur=self.serve_dur,
                                    rest_dur=self.rest_dur, full_dur=self.full_dur)
             min_car = fSolver.get_min_car_num()
@@ -145,7 +145,7 @@ class Solver:
                                   serveNum=self.serve_num,
                                   upload_dur=self.upload_dur, unpack_dur=self.unpack_dur,
                                   prepare_dur=self.prepare_dur,
-                                  leave_dur=self.leave_dur, return_dur=self.leave_dur,
+                                  leave_dur=self.leave_dur, return_dur=self.return_dur,
                                   serve_dur=self.serve_dur,
                                   rest_dur=self.rest_dur, full_dur=self.full_dur)
             min_car = fSolver.get_min_car_num()
@@ -162,7 +162,7 @@ class Solver:
             if times < 1:
                 continue
             f_car_dict = copy.deepcopy(self.factor_car_dict[f])
-            new_dict = {c_id + k + i * len(f_car_dict): v for i in range(times) for k, v in f_car_dict.items()}
+            new_dict = {c_id + k + i * len(f_car_dict): copy.deepcopy(v) for i in range(times) for k, v in f_car_dict.items()}
             c_id += len(new_dict)
             car_dict.update(new_dict)
 
