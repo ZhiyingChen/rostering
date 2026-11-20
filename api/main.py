@@ -48,7 +48,25 @@ def health():
 @app.get("/api/example")
 def example():
     with (ROOT / "data/data.csv").open(encoding="utf-8-sig", newline="") as source:
-        return {"parameters": {row["参数名称"]: int(row["参数值"]) for row in csv.DictReader(source)}}
+        parameters = {row["参数名称"]: int(row["参数值"]) for row in csv.DictReader(source)}
+    start = parameters["计划开始时刻"]
+    end = parameters["计划结束时刻"]
+    task_hours = sum(parameters[key] for key in ["装货时间", "去程时间", "服务时间", "返程时间", "卸货时间", "备货时间"])
+    slots = end - start + 1
+    return {
+        "parameters": parameters,
+        "scenario": {
+            "planning_span_hours": end - start,
+            "hourly_slots": slots,
+            "required_service_vehicles": parameters["服务车辆"],
+            "required_service_vehicle_hours": slots * parameters["服务车辆"],
+            "task_cycle_hours": task_hours,
+            "maintenance_hours": parameters["维修时间"],
+            "max_work_hours": parameters["最大工作时间"],
+            "input_parameters": len(parameters),
+            "activity_states": 8,
+        },
+    }
 
 async def run_solver(payload):
     try:

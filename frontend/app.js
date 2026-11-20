@@ -6,6 +6,18 @@ const descriptions = {计划开始时刻:'通常为 0',计划结束时刻:'720 =
 let result = null;
 let currentView = 'vehicle';
 
+function renderScenario(scenario) {
+  const metrics = [
+    [`${scenario.planning_span_hours}h`, '计划跨度', '0–720 小时'],
+    [scenario.hourly_slots, '小时刻度', '含起止时刻'],
+    [scenario.required_service_vehicles, '每小时服务车辆', '最低覆盖需求'],
+    [`${scenario.required_service_vehicle_hours}h`, '需求车·小时', '小时刻度 × 需求'],
+    [`${scenario.task_cycle_hours}h`, '单趟完整周期', '六个连续环节'],
+    [`${scenario.max_work_hours}h`, '累计工作上限', `随后维修 ${scenario.maintenance_hours}h`],
+  ];
+  document.querySelector('#scenarioMetrics').innerHTML = metrics.map(([value,label,note]) => `<article><strong>${value}</strong><span>${label}</span><small>${note}</small></article>`).join('');
+}
+
 function setStatus(ok, text) {
   document.querySelector('#serviceDot').className = ok ? 'ok' : 'bad';
   document.querySelector('#serviceText').textContent = text;
@@ -19,6 +31,7 @@ async function loadExample(scroll = false) {
     if (!response.ok) throw new Error(`服务返回 ${response.status}`);
     const data = await response.json();
     renderForm(data.parameters);
+    renderScenario(data.scenario);
     setStatus(true, '求解服务在线');
     if (scroll) document.querySelector('#simulation').scrollIntoView({behavior:'smooth'});
   } catch (error) {
@@ -48,6 +61,7 @@ function renderResults() {
   document.querySelector('#runMeta').textContent = `${result.runtime_seconds}s · 原始轮转算法`;
   document.querySelector('#kpis').innerHTML = [[kpi.vehicles,'最少车辆'],[`${kpi.coverage_percent}%`,'全时域覆盖'],[`${kpi.work_hours}h`,'总执行工时'],[`${kpi.shortage_vehicle_hours}h`,'启动期缺口'],[`${kpi.work_spread_hours}h`,'工时差异']].map(([value,label]) => `<article><span>${label}</span><strong>${value}</strong></article>`).join('');
   document.querySelector('#warnings').innerHTML = result.warnings.map(message => `<div class="warning">${message}</div>`).join('');
+  document.querySelector('#solvedScale').innerHTML = `<strong>本次实际输出：</strong>${kpi.vehicles} 辆车 × ${result.hours.length} 个小时刻度 = <b>${(kpi.vehicles * result.hours.length).toLocaleString('zh-CN')}</b> 个车辆小时状态；求解耗时 ${result.runtime_seconds}s。`;
   document.querySelector('#legend').innerHTML = activityLabels.map((label,index) => `<span><i class="state-${index}"></i>${label}</span>`).join('');
   renderVisual(); renderTable();
 }

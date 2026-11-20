@@ -15,28 +15,55 @@
   <main>
     <section class="hero" id="problem">
       <div class="eyebrow">运筹优化 · 车辆轮转</div>
-      <h1>怎样用最少的车辆，<br>持续完成全天候服务？</h1>
-      <p>一个服务区域要求每小时至少有指定数量的车辆在岗。车辆每次完成装货、去程、服务、返程和卸货后才能再次投入任务；累计工作达到上限后，还必须进入维修。问题是：在整个计划周期内，至少需要多少辆车，如何安排每辆车的任务与维修？</p>
+      <h1>需要多少辆车，才能按节拍持续服务并按时维修？</h1>
+      <p>运营方要在一段连续计划期内轮换一支同类车队。车辆不能直接出现在服务区：它要依次完成装货、去程、现场服务、返程、卸货和备货；剩余可工作时间不足以完成下一趟完整任务时，还要停运维修。模型要决定车队规模，以及每辆车何时执行每个环节。</p>
       <div class="hero-actions">
         <a class="primary" href="#simulation">开始模拟</a>
         <button class="secondary" id="loadExampleTop">查看示例场景</button>
       </div>
     </section>
 
-    <section class="problem-grid">
-      <article><b>01</b><h2>持续覆盖</h2><p>服务区每个小时都需要足够车辆执行服务，不能因周转或维修造成长期中断。</p></article>
-      <article><b>02</b><h2>完整任务周期</h2><p>一次任务包含装货、去程、现场服务、返程、卸货与备货，每个环节都会占用车辆。</p></article>
-      <article><b>03</b><h2>强制维修</h2><p>车辆累计工作达到最大工时后必须维修，维修期间不可执行新任务。</p></article>
-    </section>
-
-    <section class="explain">
-      <div><div class="eyebrow">模型目标</div><h2>算法会回答什么？</h2></div>
-      <div class="answer-list">
-        <p><span>最小车队规模</span>满足给定服务需求所需的车辆数量。</p>
-        <p><span>车辆轮转计划</span>每辆车何时工作、服务、空闲或维修。</p>
-        <p><span>计划质量指标</span>覆盖率、缺口、总工时、维修工时与车辆间工时差异。</p>
+    <section class="story-panel" aria-labelledby="storyTitle">
+      <div class="story-copy">
+        <div class="eyebrow">现实业务</div><h2 id="storyTitle">覆盖、周转与维修同时争夺车辆</h2>
+        <p>服务区希望始终保持规定数量的车辆在现场，但一辆车只有“服务”阶段算作覆盖；装卸、往返、备货、维修和空闲都不能计入。任务越长、维修越频繁，需要错峰轮换的车辆就越多。人工逐小时安排时，每加入一趟任务，都要重新核对该车是否可用、剩余工时是否够跑完整周期、服务区是否出现空档；示例最终形成数千个小时状态，逐格维护很容易发生冲突。</p>
+      </div>
+      <div class="model-flow" aria-label="从输入到排班结果的车辆轮转流程">
+        <div class="flow-node"><small>已知</small><strong>计划期与覆盖需求</strong><span>每小时在场车辆数</span></div><i>＋</i>
+        <div class="flow-node"><small>已知</small><strong>完整任务与维修规则</strong><span>各环节持续时间</span></div><b>→</b>
+        <div class="flow-core"><span>轮转算法</span><strong>错峰发车<br>分配可用车辆</strong></div><b>→</b>
+        <div class="flow-node output"><small>得到</small><strong>车辆 × 小时任务表</strong><span>覆盖、缺口与工时</span></div>
       </div>
     </section>
+
+    <section class="example-scale" aria-labelledby="scaleTitle">
+      <div class="section-intro"><div class="eyebrow">当前示例 · 来自 data.csv</div><h2 id="scaleTitle">30 天连续运营被展开成逐小时计划</h2><p>以下数字由页面从当前示例接口计算，不代表所有可配置场景。</p></div>
+      <div class="scale-grid" id="scenarioMetrics"><div class="empty">正在读取示例规模…</div></div>
+      <div class="scale-note" id="solvedScale">实际求解示例后，将在此补充车队规模与状态单元数。</div>
+    </section>
+
+    <section class="io-grid">
+      <article><div class="io-icon">IN</div><h2>已知输入</h2><ul><li><b>计划边界</b>：开始、结束小时</li><li><b>服务需求</b>：每小时至少几辆车在服务区</li><li><b>任务用时</b>：装货、去程、服务、返程、卸货、备货</li><li><b>维护规则</b>：维修时长与维修前最大累计工作时间</li></ul></article>
+      <article><div class="io-icon decision">DO</div><h2>模型决策</h2><ul><li><b>车队规模</b>：为完成轮转需要创建多少辆车</li><li><b>发车与用车</b>：每个发车时刻由哪辆可用车执行</li><li><b>小时状态</b>：每辆车逐小时处于任务、维修或空闲</li><li><b>维修插入</b>：何时退出任务并恢复可工作时长</li></ul></article>
+      <article><div class="io-icon output">OUT</div><h2>优化输出</h2><ul><li><b>排班矩阵</b>：车辆 × 小时的 8 类活动状态</li><li><b>任务明细</b>：每段活动的开始、结束和时长</li><li><b>覆盖曲线</b>：每小时实际在场服务车辆数</li><li><b>质量指标</b>：车辆数、覆盖率、缺口、工时及工时差</li></ul></article>
+    </section>
+
+    <section class="rules-section">
+      <div class="section-intro"><div class="eyebrow">核心规则</div><h2>一张可执行轮转表必须满足什么？</h2><p>这些规则直接对应现有 <code>singleRoster</code> 算法；模型没有员工技能、偏好、人工成本或班次公平性输入。</p></div>
+      <div class="rules-grid">
+        <article><span>01</span><h3>覆盖节拍</h3><p>算法按“服务时长 ÷ 所需服务车辆数”生成发车节拍；多车需求会按服务时长的因子拆成若干车组。</p></article>
+        <article><span>02</span><h3>完整任务顺序</h3><p>同一趟任务固定按装货 → 去程 → 服务 → 返程 → 卸货 → 备货连续执行，车辆完成前不可接下一趟。</p></article>
+        <article><span>03</span><h3>车辆可用性</h3><p>只有已到最早可用时刻，且剩余可工作时间足以完成一整趟任务的车辆，才可再次被分配。</p></article>
+        <article><span>04</span><h3>维修恢复</h3><p>剩余工时不足以再跑完整周期时，车辆立即进入给定时长的维修；维修结束后可工作时长恢复到上限。</p></article>
+      </div>
+    </section>
+
+    <section class="objective-panel">
+      <div><div class="eyebrow">算法目标与口径</div><h2>在固定服务节拍下，尽量少创建车辆</h2><p>现有实现是因子分组的构造式启发算法：每个发车点优先复用可用且剩余工时最少的车辆；没有可用车时才新增车辆。它不计算成本加权目标，也不承诺全局数学最优。</p></div>
+      <div class="objective-formula"><small>构造目标</small><strong>最少新增车辆</strong><span>同时遵守任务顺序 + 可用时间 + 工时/维修规则 + 服务发车节拍</span></div>
+    </section>
+
+    <section class="answer-strip"><span>模型实际回答的问题</span><strong>给定运营时域、每小时服务需求、完整任务耗时和维修规则，需要创建多少辆车，并如何把每辆车的任务与维修排到逐小时计划中？</strong></section>
 
     <section class="simulation" id="simulation">
       <div class="section-heading">
