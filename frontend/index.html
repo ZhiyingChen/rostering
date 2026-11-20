@@ -34,6 +34,21 @@
         <div class="flow-core"><span>轮转算法</span><strong>错峰发车<br>分配可用车辆</strong></div><b>→</b>
         <div class="flow-node output"><small>得到</small><strong>车辆 × 小时任务表</strong><span>覆盖、缺口与工时</span></div>
       </div>
+      <div class="rotation-visual" aria-label="一辆车的完整任务周期和维修轮转示意图">
+        <div class="visual-caption"><span>ROTATION BLUEPRINT</span><strong>一辆车如何完成一趟任务，再回到可用车队</strong><small>示例参数：完整周期 16 小时；累计工作达到 100 小时后维修 40 小时</small></div>
+        <div class="rotation-map">
+          <svg class="route-svg" viewBox="0 0 900 110" role="img" aria-label="基地到服务区再返回基地的路线">
+            <path d="M105 54 C205 10 250 10 350 54 S500 98 610 54 S730 12 795 54" fill="none" stroke="#9bb1c4" stroke-width="2" stroke-dasharray="7 7"/>
+            <path d="M105 54 C205 10 250 10 350 54" fill="none" stroke="#175cd3" stroke-width="4"/>
+            <path d="M350 54 C450 98 500 98 610 54" fill="none" stroke="#12b76a" stroke-width="4"/>
+            <path d="M610 54 C730 12 750 12 795 54" fill="none" stroke="#f79009" stroke-width="4"/>
+            <circle cx="105" cy="54" r="22" fill="#eaf2ff" stroke="#175cd3" stroke-width="2"/><circle cx="350" cy="54" r="22" fill="#e8f8f5" stroke="#12b76a" stroke-width="2"/><circle cx="610" cy="54" r="22" fill="#fff4e5" stroke="#f79009" stroke-width="2"/><circle cx="795" cy="54" r="22" fill="#eef1f5" stroke="#344054" stroke-width="2"/>
+            <text x="105" y="58" text-anchor="middle" fill="#175cd3" font-size="12" font-weight="700">基地</text><text x="350" y="58" text-anchor="middle" fill="#087b70" font-size="12" font-weight="700">服务</text><text x="610" y="58" text-anchor="middle" fill="#b54708" font-size="12" font-weight="700">基地</text><text x="795" y="58" text-anchor="middle" fill="#344054" font-size="12" font-weight="700">维修</text>
+            <text x="225" y="19" text-anchor="middle" fill="#63788d" font-size="11">装货 1h + 去程 2h</text><text x="480" y="101" text-anchor="middle" fill="#63788d" font-size="11">服务 6h + 返程 2h</text><text x="700" y="19" text-anchor="middle" fill="#63788d" font-size="11">卸货 5h + 备货 0h</text><text x="795" y="98" text-anchor="middle" fill="#63788d" font-size="11">维修 40h</text>
+          </svg>
+        </div>
+        <div class="rotation-legend"><span><i class="route-dot blue"></i>出车准备</span><span><i class="route-dot green"></i>服务覆盖</span><span><i class="route-dot orange"></i>返回处理</span><span><i class="route-dot dark"></i>维修不可用</span></div>
+      </div>
     </section>
 
     <section class="example-scale" aria-labelledby="scaleTitle">
