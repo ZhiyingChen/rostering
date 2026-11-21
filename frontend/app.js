@@ -8,7 +8,7 @@ let currentView = 'vehicle';
 let timeWindow = 'all';
 let windowStart = 0;
 let tablePage = 1;
-const pageSize = 30;
+const pageSize = 20;
 
 function renderScenario(scenario) {
   const metrics = [
@@ -68,6 +68,10 @@ function renderResults() {
   document.querySelector('#solvedScale').innerHTML = `<strong>本次实际输出：</strong>${kpi.vehicles} 辆车 × ${result.hours.length} 个小时刻度 = <b>${(kpi.vehicles * result.hours.length).toLocaleString('zh-CN')}</b> 个车辆小时状态；求解耗时 ${result.runtime_seconds}s。`;
   document.querySelector('#legend').innerHTML = activityLabels.map((label,index) => `<span><i class="state-${index}"></i>${label}</span>`).join('');
   document.querySelector('#activityFilter').innerHTML = '<option value="">全部活动</option>' + activityLabels.map(label => `<option value="${label}">${label}</option>`).join('');
+  document.querySelector('#vehicleFilter').innerHTML = '<option value="">全部车辆</option>' + result.vehicles.map(vehicle => `<option value="${vehicle.id}">车辆 ${vehicle.id}</option>`).join('');
+  document.querySelector('#download').disabled = false;
+  document.querySelector('#segmentInfo').textContent = '点击甘特图中的任务片段，查看车辆、活动和起止时间。';
+  document.querySelector('#vehicleSummary').innerHTML = result.vehicles.map(vehicle => `<article><strong>车辆 ${vehicle.id}</strong><span>服务 ${vehicle.service_hours}h · 工作 ${vehicle.work_hours}h</span><span>维修 ${vehicle.maintenance_hours}h · 空闲 ${vehicle.states.filter(state => state === 7).length}h</span></article>`).join('');
   renderVisual(); renderTable();
 }
 function currentTimeRange() {
@@ -76,26 +80,37 @@ function currentTimeRange() {
   const size=Number(timeWindow), end=Math.min(limit,windowStart+size);
   return {start:windowStart,end,labelEnd:Math.min(last,end)};
 }
-function renderAxis(start,end) { const duration=end-start; return Array.from({length:6},(_,i)=>{const value=Math.round(start+duration*i/5);return `<i style="left:${i*20}%">${value}h</i>`}).join(''); }
+function renderAxis(start,end) {
+  const divisions = window.innerWidth < 700 ? 3 : 6;
+  return Array.from({length:divisions+1},(_,index)=>`<i style="left:${index*100/divisions}%">${Math.round(start+(end-start)*index/divisions)}h</i>`).join('');
+}
+function renderCoverage() {
+  const start=result.hours[0], end=result.hours[result.hours.length-1]+1, required=result.parameters['服务车辆'];
+  const maximum=Math.max(...result.coverage,required,1), x=hour=>60+(hour-start)/(end-start)*920, y=value=>215-value/maximum*165;
+  const points=result.coverage.map((value,index)=>`${x(result.hours[index])},${y(value)}`).join(' ');
+  const ticks=Array.from({length:7},(_,i)=>{const hour=start+(end-start)*i/6;return `<text x="${x(hour)}" y="250" text-anchor="${i===0?'start':i===6?'end':'middle'}">${Math.min(end-1,Math.round(hour))}h</text>`}).join('');
+  return `<svg class="coverage-svg" viewBox="0 0 1020 270" role="img" aria-label="完整时域服务覆盖曲线，需求 ${required} 辆"><path d="M60 45V215H980" fill="none" stroke="#dbe5ee"/><path d="M60 ${y(required)}H980" stroke="#f79009" stroke-dasharray="6 4"/><polyline points="${points}" fill="none" stroke="#0e9384" stroke-width="3"/><g fill="#63788d" font-size="12">${ticks}<text x="12" y="${y(required)+4}">${required} 辆</text><text x="64" y="27">实线：服务车辆 · 虚线：最低需求</text></g></svg>`;
+}
 function renderVisual() {
   if(!result) return;
   const visual=document.querySelector('#visual'), controls=document.querySelector('#timelineControls');
   if(currentView==='coverage'){
-    controls.hidden=true; const max=Math.max(...result.coverage,result.parameters['服务车辆']);
-    visual.innerHTML=`<div class="coverage-full">${result.coverage.map((value,index)=>`<i class="${value<result.parameters['服务车辆']?'short':''}" style="height:${Math.max(3,value/max*100)}%" title="${result.hours[index]}h：${value} 辆"></i>`).join('')}</div><p class="chart-note">每根柱表示一个小时的服务车辆数；红色表示低于需求。</p>`; return;
+    controls.hidden=true;
+    visual.innerHTML=renderCoverage(); return;
   }
   controls.hidden=false; const {start,end,labelEnd}=currentTimeRange(),duration=end-start;
-  document.querySelector('#timeRange').textContent=`${start}–${labelEnd}h`;
+  document.querySelector('#timeRange').textContent=`${start}–${end}h`;
   const slider=document.querySelector('#timelineRange'); slider.min=result.hours[0]; slider.max=Math.max(result.hours[0],result.hours[result.hours.length-1]+1-(timeWindow==='all'?duration:Number(timeWindow))); slider.value=start; slider.disabled=timeWindow==='all';
   document.querySelectorAll('[data-window]').forEach(button=>button.classList.toggle('active',button.dataset.window===String(timeWindow)));
-  const rows=result.vehicles.map(vehicle=>{const segments=result.segments.filter(segment=>segment.vehicle===vehicle.id&&segment.end>start&&segment.start<end).map(segment=>{const left=100*(Math.max(start,segment.start)-start)/duration,width=100*(Math.min(end,segment.end)-Math.max(start,segment.start))/duration;return `<i class="timeline-segment state-${segment.state}" style="left:${left}%;width:${width}%" title="车辆 ${segment.vehicle} · ${segment.activity} · ${segment.start}–${segment.end}h"></i>`}).join('');return `<div class="timeline-row"><b>车辆 ${vehicle.id}</b><section class="timeline-track">${segments}</section></div>`}).join('');
-  visual.innerHTML=`<div class="timeline"><div class="timeline-axis"><span>车辆</span><section class="axis-track">${renderAxis(start,labelEnd)}</section></div>${rows}</div>`;
+  const rows=result.vehicles.map(vehicle=>{const segments=result.segments.filter(segment=>segment.vehicle===vehicle.id&&segment.end>start&&segment.start<end).map(segment=>{const left=100*(Math.max(start,segment.start)-start)/duration,width=100*(Math.min(end,segment.end)-Math.max(start,segment.start))/duration;return `<i class="timeline-segment state-${segment.state}" data-vehicle="${segment.vehicle}" data-start="${segment.start}" style="left:${left}%;width:${width}%" title="车辆 ${segment.vehicle} · ${segment.activity} · ${segment.start}–${segment.end}h"></i>`}).join('');return `<div class="timeline-row"><b>车辆 ${vehicle.id}</b><section class="timeline-track">${segments}</section></div>`}).join('');
+  visual.innerHTML=`<div class="timeline"><div class="timeline-axis"><span>车辆</span><section class="axis-track">${renderAxis(start,end)}</section></div>${rows}</div>`;
 }
-function filteredSegments(){const query=document.querySelector('#search').value.trim().toLowerCase(),activity=document.querySelector('#activityFilter').value;return result.segments.filter(item=>(!query||`车辆 ${item.vehicle} ${item.activity}`.toLowerCase().includes(query))&&(!activity||item.activity===activity));}
+function filteredSegments(){const query=document.querySelector('#search').value.trim().toLowerCase(),activity=document.querySelector('#activityFilter').value,vehicle=document.querySelector('#vehicleFilter').value;return result.segments.filter(item=>(!query||`车辆 ${item.vehicle} ${item.activity}`.toLowerCase().includes(query))&&(!activity||item.activity===activity)&&(!vehicle||item.vehicle===Number(vehicle))).sort((a,b)=>a.start-b.start||a.vehicle-b.vehicle);}
+function dayTime(hour) { const relative=hour-result.hours[0]; return `第 ${Math.floor(relative/24)+1} 天 · ${String(relative%24).padStart(2,'0')}:00`; }
 function renderTable() {
   if(!result) return; const rows=filteredSegments(),pages=Math.max(1,Math.ceil(rows.length/pageSize)); tablePage=Math.min(tablePage,pages); const visible=rows.slice((tablePage-1)*pageSize,tablePage*pageSize);
   document.querySelector('#tableMeta').textContent=`共 ${rows.length.toLocaleString()} 条任务片段，每页 ${pageSize} 条`;
-  document.querySelector('#table').innerHTML=`<table><thead><tr><th>车辆</th><th>开始时刻</th><th>结束时刻</th><th>持续时间</th><th>活动</th></tr></thead><tbody>${visible.map(item=>`<tr><td>车辆 ${item.vehicle}</td><td>${item.start}h</td><td>${item.end}h</td><td>${item.end-item.start}h</td><td><span class="activity-cell"><i class="state-${item.state}"></i>${item.activity}</span></td></tr>`).join('')}</tbody></table>`;
+  document.querySelector('#table').innerHTML=`<table><thead><tr><th>车辆</th><th>活动</th><th>开始时刻</th><th>结束时刻</th><th>持续时间</th></tr></thead><tbody>${visible.map(item=>`<tr><td data-label="车辆">车辆 ${item.vehicle}</td><td data-label="活动"><span class="activity-cell"><i class="state-${item.state}"></i>${item.activity}</span></td><td data-label="开始时刻">${item.start}h<small>${dayTime(item.start)}</small></td><td data-label="结束时刻">${item.end}h<small>${dayTime(item.end)}</small></td><td data-label="持续时间">${item.end-item.start} 小时</td></tr>`).join('')||'<tr><td colspan="5">没有符合筛选条件的任务，请调整筛选。</td></tr>'}</tbody></table>`;
   const pagination=document.querySelector('#pagination'); pagination.hidden=rows.length<=pageSize; document.querySelector('#pageMeta').textContent=`第 ${tablePage} / ${pages} 页`; document.querySelector('#prevPage').disabled=tablePage===1; document.querySelector('#nextPage').disabled=tablePage===pages;
 }
 function download() {
@@ -111,6 +126,13 @@ document.querySelector('#solve').onclick = solve;
 document.querySelector('#download').onclick = download;
 document.querySelector('#search').oninput=()=>{tablePage=1;renderTable()};
 document.querySelector('#activityFilter').onchange=()=>{tablePage=1;renderTable()};
+document.querySelector('#vehicleFilter').onchange=()=>{tablePage=1;renderTable()};
+document.querySelector('#visual').onclick=event=>{
+  const target=event.target.closest('[data-vehicle]'); if(!target||!result)return;
+  const item=result.segments.find(segment=>segment.vehicle===Number(target.dataset.vehicle)&&segment.start===Number(target.dataset.start));
+  document.querySelector('#segmentInfo').textContent=`车辆 ${item.vehicle} · ${item.activity} · ${item.start}–${item.end}h · 持续 ${item.end-item.start} 小时`;
+  document.querySelector('#vehicleFilter').value=String(item.vehicle); document.querySelector('#activityFilter').value=item.activity; tablePage=1;renderTable();
+};
 document.querySelector('#prevPage').onclick=()=>{tablePage--;renderTable()};
 document.querySelector('#nextPage').onclick=()=>{tablePage++;renderTable()};
 document.querySelectorAll('[data-window]').forEach(button=>button.onclick=()=>{timeWindow=button.dataset.window;windowStart=result.hours[0];renderVisual()});
@@ -118,3 +140,4 @@ document.querySelector('#timelineRange').oninput=event=>{windowStart=Number(even
 document.querySelector('#viewVehicle').onclick=()=>{currentView='vehicle';document.querySelector('#viewVehicle').className='active';document.querySelector('#viewCoverage').className='';renderVisual()};
 document.querySelector('#viewCoverage').onclick=()=>{currentView='coverage';document.querySelector('#viewCoverage').className='active';document.querySelector('#viewVehicle').className='';renderVisual()};
 loadExample();
+window.addEventListener('resize',()=>{if(result)renderVisual()});

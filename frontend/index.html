@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>车辆轮转排班模拟器</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%230e9384'/%3E%3Ctext x='20' y='28' font-size='27' font-family='sans-serif' text-anchor='middle' fill='white'%3ER%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css?v=20261121-results2">
+  <link rel="stylesheet" href="results.css?v=20261121-results2">
 </head>
 <body>
   <header class="nav">
@@ -103,7 +105,7 @@
       </div>
       <div class="workspace">
         <aside class="panel controls">
-          <div class="panel-title"><h3>模拟参数</h3><button id="loadExample">恢复示例</button></div>
+          <div class="panel-title"><h3>运营参数</h3><button id="loadExample">恢复示例</button></div>
           <div id="form" class="form"></div>
           <button class="solve" id="solve">运行车辆排班模拟</button>
           <div id="formError" class="error hidden"></div>
@@ -119,9 +121,13 @@
             <div id="legend" class="legend"></div>
             <div class="timeline-controls" id="timelineControls" hidden><div><button data-window="all" class="active">完整时域</button><button data-window="168">7 天</button><button data-window="72">72 小时</button><button data-window="24">24 小时</button></div><label><span id="timeRange">0–720h</span><input id="timelineRange" type="range" min="0" max="0" value="0"></label></div>
             <div id="visual" class="visual"><div class="empty">暂无排班结果</div></div>
+            <p class="chart-note">完整视图展示全部车辆与全部时间；选择 24 小时可查看单次任务。点击色块，下方可查看活动与起止时间。原算法含结束时刻记录：示例最后一个小时从 720h 开始，任务片段右边界为 721h。</p>
+            <div id="segmentInfo" class="segment-info" aria-live="polite">运行后点击任一任务片段，查看具体安排。</div>
+            <div id="vehicleSummary" class="vehicle-summary"></div>
           </section>
           <section class="panel detail-panel">
-            <div class="detail-heading"><div><h3>任务明细</h3><p id="tableMeta">运行后可按车辆或活动查询任务片段</p></div><div class="detail-actions"><input id="search" placeholder="搜索车辆或活动"><select id="activityFilter"><option value="">全部活动</option></select><button id="download">导出全部 CSV</button></div></div>
+            <div class="detail-heading"><div><h3>任务明细</h3><p id="tableMeta">每段任务的车辆、活动、起止时间和持续时长</p></div><button id="download" class="export-button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></svg><span>导出排班</span><small>CSV</small></button></div>
+            <div class="detail-actions"><input id="search" aria-label="搜索车辆或活动" placeholder="搜索车辆或活动"><select id="vehicleFilter" aria-label="筛选车辆"><option value="">全部车辆</option></select><select id="activityFilter" aria-label="筛选活动"><option value="">全部活动</option></select><span>按开始时刻排序 · 导出包含全部任务</span></div>
             <div id="table" class="table-wrap"><div class="empty">暂无任务明细</div></div>
             <div id="pagination" class="pagination" hidden><button id="prevPage">上一页</button><span id="pageMeta"></span><button id="nextPage">下一页</button></div>
           </section>
@@ -130,6 +136,6 @@
     </section>
   </main>
   <footer>Vehicle Scheduling Lab · 基于项目原有 singleRoster 轮转算法 · <a id="docsLink" href="docs" target="_blank">API 文档</a></footer>
-  <script src="app.js"></script>
+  <script src="app.js?v=20261121-results2"></script>
 </body>
 </html>

@@ -16,6 +16,13 @@ app = FastAPI(title="Rostering · 车辆轮转优化 API", version="1.0.0")
 gate = asyncio.Semaphore(1)
 logger = logging.getLogger(__name__)
 
+@app.middleware("http")
+async def refresh_frontend_assets(request: Request, call_next):
+    response = await call_next(request)
+    if not request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return response
+
 class SolveRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     parameters: dict[str, StrictInt]
