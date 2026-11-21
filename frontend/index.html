@@ -114,15 +114,16 @@
             <div id="kpis" class="kpis"><div class="empty">调整参数后运行模拟，这里将显示真实算法结果。</div></div>
             <div id="warnings"></div>
           </section>
-          <section class="panel">
-            <div class="panel-title"><h3>车辆任务矩阵</h3><div class="view-actions"><button id="viewVehicle" class="active">车辆视角</button><button id="viewCoverage">覆盖视角</button></div></div>
+          <section class="panel roster-panel">
+            <div class="panel-title"><div><h3>车辆任务甘特图</h3><small>默认完整显示全部计划时域，也可放大查看局部任务</small></div><div class="view-actions"><button id="viewVehicle" class="active">车辆甘特图</button><button id="viewCoverage">覆盖曲线</button></div></div>
             <div id="legend" class="legend"></div>
-            <div class="timeline-controls"><button id="previousTime">← 上一段</button><strong id="timeRange">等待运行</strong><button id="nextTime">下一段 →</button><label>窗口<select id="timeWindow"><option value="24">24 小时</option><option value="72" selected>72 小时</option><option value="168">7 天</option><option value="all">全部时域</option></select></label></div>
+            <div class="timeline-controls" id="timelineControls" hidden><div><button data-window="all" class="active">完整时域</button><button data-window="168">7 天</button><button data-window="72">72 小时</button><button data-window="24">24 小时</button></div><label><span id="timeRange">0–720h</span><input id="timelineRange" type="range" min="0" max="0" value="0"></label></div>
             <div id="visual" class="visual"><div class="empty">暂无排班结果</div></div>
           </section>
-          <section class="panel">
-            <div class="panel-title"><h3>任务明细 <small id="rowCount"></small></h3><div class="view-actions"><input id="search" placeholder="搜索车辆或活动"><button id="download">导出 CSV</button></div></div>
+          <section class="panel detail-panel">
+            <div class="detail-heading"><div><h3>任务明细</h3><p id="tableMeta">运行后可按车辆或活动查询任务片段</p></div><div class="detail-actions"><input id="search" placeholder="搜索车辆或活动"><select id="activityFilter"><option value="">全部活动</option></select><button id="download">导出全部 CSV</button></div></div>
             <div id="table" class="table-wrap"><div class="empty">暂无任务明细</div></div>
+            <div id="pagination" class="pagination" hidden><button id="prevPage">上一页</button><span id="pageMeta"></span><button id="nextPage">下一页</button></div>
           </section>
         </div>
       </div>
